@@ -90,7 +90,8 @@ public class AgentController implements Agent, AgentConstants {
 	/**
 	 * Constructor.
 	 *
-	 * @param eventSyncCondition event sync condition to wait until agent start to run.
+	 * @param eventSyncCondition
+	 *            event sync condition to wait until agent start to run.
 	 */
 	public AgentController(Condition eventSyncCondition, AgentConfig agentConfig) throws GrinderException {
 		this.m_eventSyncCondition = eventSyncCondition;
@@ -99,18 +100,19 @@ public class AgentController implements Agent, AgentConstants {
 		this.version = agentConfig.getInternalProperties().getProperty(PROP_INTERNAL_NGRINDER_VERSION);
 		this.m_agentControllerServerListener = new AgentControllerServerListener(m_eventSynchronization, LOGGER);
 		// Set it with the default name
-		this.m_agentIdentity = new AgentControllerIdentityImplementation(agentConfig.getAgentHostID(), NetworkUtils.DEFAULT_LOCAL_HOST_ADDRESS);
+		this.m_agentIdentity = new AgentControllerIdentityImplementation(agentConfig.getAgentHostID(),
+				NetworkUtils.DEFAULT_LOCAL_HOST_ADDRESS);
 		this.m_agentIdentity.setRegion(agentConfig.getRegion());
 		this.agentSystemDataCollector = new SystemDataCollector();
 		this.agentSystemDataCollector.setAgentHome(agentConfig.getHome().getDirectory());
 		this.agentSystemDataCollector.refresh();
 	}
 
-
 	/**
 	 * Run the agent controller.
 	 *
-	 * @throws GrinderException occurs when the test execution is failed.
+	 * @throws GrinderException
+	 *             occurs when the test execution is failed.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	public void run() throws GrinderException {
@@ -122,13 +124,14 @@ public class AgentController implements Agent, AgentConstants {
 		ConsoleCommunication consoleCommunication = null;
 		m_fanOutStreamSender = new FanOutStreamSender(GrinderConstants.AGENT_CONTROLLER_FANOUT_STREAM_THREAD_COUNT);
 		m_timer = new Timer(false);
-		AgentDaemon agent = new AgentDaemon(checkNotNull(agentConfig,
-				"agent.conf should be provided before agent daemon start."));
+		AgentDaemon agent = new AgentDaemon(
+				checkNotNull(agentConfig, "agent.conf should be provided before agent daemon start."));
 		try {
 			while (true) {
 				do {
 					if (consoleCommunication == null) {
-						final Connector connector = m_connectorFactory.create(agentConfig.getControllerIP(), agentConfig.getControllerPort());
+						final Connector connector = m_connectorFactory.create(agentConfig.getControllerIP(),
+								agentConfig.getControllerPort());
 						try {
 							consoleCommunication = new ConsoleCommunication(connector);
 							consoleCommunication.start();
@@ -208,9 +211,11 @@ public class AgentController implements Agent, AgentConstants {
 					startMessage = null;
 					m_connectionPort = 0;
 					m_state = AgentControllerState.UPDATING;
-					final AgentUpdateGrinderMessage message = m_agentControllerServerListener.getLastAgentUpdateGrinderMessage();
+					final AgentUpdateGrinderMessage message = m_agentControllerServerListener
+							.getLastAgentUpdateGrinderMessage();
 					m_agentControllerServerListener.discardMessages(AgentControllerServerListener.AGENT_UPDATE);
-					AgentDownloadGrinderMessage agentDownloadGrinderMessage = new AgentDownloadGrinderMessage(message.getVersion());
+					AgentDownloadGrinderMessage agentDownloadGrinderMessage = new AgentDownloadGrinderMessage(
+							message.getVersion());
 					try {
 						// If it's initial message
 						if (agentUpdateHandler == null && message.getNext() == 0) {
@@ -225,8 +230,8 @@ public class AgentController implements Agent, AgentConstants {
 								retryCount++;
 								agentDownloadGrinderMessage.setNext(message.getOffset());
 							} else {
-								throw new CommunicationException("Error while getting the agent package from " +
-										"controller");
+								throw new CommunicationException(
+										"Error while getting the agent package from " + "controller");
 							}
 						} else {
 							throw new CommunicationException("Error while getting the agent package from controller");
@@ -287,12 +292,12 @@ public class AgentController implements Agent, AgentConstants {
 		Arrays.sort(logFiles);
 		// Take only one file... if agent.send.all.logs is not set.
 		if (!agentConfig.getAgentProperties().getPropertyBoolean(PROP_AGENT_ALL_LOGS)) {
-			logFiles = new File[]{logFiles[0]};
+			logFiles = new File[] { logFiles[0] };
 		}
-		final byte[] compressedLog = LogCompressUtils.compress(logFiles,
-				Charset.defaultCharset(), Charset.forName("UTF-8")
-		);
-		consoleCommunication.sendMessage(new LogReportGrinderMessage(testId, compressedLog, new AgentAddress(m_agentIdentity)));
+		final byte[] compressedLog = LogCompressUtils.compress(logFiles, Charset.defaultCharset(),
+				Charset.forName("UTF-8"));
+		consoleCommunication
+				.sendMessage(new LogReportGrinderMessage(testId, compressedLog, new AgentAddress(m_agentIdentity)));
 		// Delete logs to clean up
 		if (!agentConfig.getAgentProperties().getPropertyBoolean(PROP_AGENT_KEEP_LOGS)) {
 			LOGGER.info("Clean up the perftest logs");
@@ -304,7 +309,7 @@ public class AgentController implements Agent, AgentConstants {
 		sendCurrentState(consoleCommunication);
 		if (consoleCommunication != null) {
 			consoleCommunication.shutdown();
-			//noinspection UnusedAssignment
+			// noinspection UnusedAssignment
 			consoleCommunication = null;
 		}
 		m_agentControllerServerListener.discardMessages(AgentControllerServerListener.ANY);
@@ -355,7 +360,6 @@ public class AgentController implements Agent, AgentConstants {
 		return agentConfig;
 	}
 
-
 	public final class ConsoleCommunication {
 		private final ClientSender m_sender;
 		private final TimerTask m_reportRunningTask;
@@ -394,7 +398,8 @@ public class AgentController implements Agent, AgentConstants {
 		}
 
 		public void sendCurrentState() throws CommunicationException {
-			sendMessage(new AgentControllerProcessReportMessage(m_state, getSystemDataModel(), m_connectionPort, version));
+			sendMessage(
+					new AgentControllerProcessReportMessage(m_state, getSystemDataModel(), m_connectionPort, version));
 		}
 
 		public void start() {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.ngrinder</groupId>
@@ -17,22 +17,7 @@
 		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
 
-	<profiles>
-		<profile>
-			<id>internal</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-war-plugin</artifactId>
-						<configuration>
-							<webappDirectory>${deploy.dir}</webappDirectory>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>rome</groupId>
@@ -342,7 +327,7 @@
 			<artifactId>gson</artifactId>
 			<version>2.2</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>jaxen</groupId>
 			<artifactId>jaxen</artifactId>
@@ -409,7 +394,7 @@
 			<artifactId>pf4j</artifactId>
 			<version>0.12.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ro.fortsoft.pf4j</groupId>
 			<artifactId>pf4j-spring</artifactId>
@@ -437,6 +422,19 @@
 			<artifactId>lucy-xss-servlet</artifactId>
 			<version>2.0.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-xstream</artifactId>
+			<version>2.21.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.4.10</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -456,121 +454,136 @@
 				</includes>
 			</resource>
 		</resources>
-		<plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<configuration>
+						<downloadSources>true</downloadSources>
+						<downloadJavadocs>true</downloadJavadocs>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<configuration>
+						<webappDirectory>${deploy.dir}</webappDirectory>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.7</version>
+					<configuration>
+						<skip>true</skip>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.15</version>
+					<configuration>
+						<argLine>-Xms600m -Xmx1024m -XX:MaxPermSize=200m</argLine>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>copy</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>copy</goal>
+							</goals>
+							<configuration>
+								<artifactItems>
+									<artifactItem>
+										<groupId>junit</groupId>
+										<artifactId>junit-dep</artifactId>
+										<version>4.8.2</version>
+									</artifactItem>
+								</artifactItems>
+								<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/lib</outputDirectory>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<configuration>
+						<archive>
+							<manifest>
+								<mainClass>org.ngrinder.NGrinderControllerStarter</mainClass>
+							</manifest>
+						</archive>
+						<packagingExcludes>
+							WEB-INF/lib/jetty-*.jar,WEB-INF/lib/ngrinder-starter*.jar,WEB-INF/lib/grinder-3.9.1.jar
+						</packagingExcludes>
+						<overlays>
+							<overlay>
+								<groupId>org.ngrinder</groupId>
+								<artifactId>ngrinder-starter</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-server</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-http</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-io</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-xml</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-servlet</artifactId>
+								<type>jar</type>
+							</overlay>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.7</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.15</version>
-				<configuration>
-					<argLine>-Xms600m -Xmx1024m -XX:MaxPermSize=200m</argLine>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy</id>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>junit</groupId>
-									<artifactId>junit-dep</artifactId>
-									<version>4.8.2</version>
-								</artifactItem>
-							</artifactItems>
-							<outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/lib</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>org.ngrinder.NGrinderControllerStarter</mainClass>
-						</manifest>
-					</archive>
-					<packagingExcludes>
-						WEB-INF/lib/jetty-*.jar,WEB-INF/lib/ngrinder-starter*.jar,WEB-INF/lib/grinder-3.9.1.jar
-					</packagingExcludes>
-					<overlays>
-						<overlay>
-							<groupId>org.ngrinder</groupId>
-							<artifactId>ngrinder-starter</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-server</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-http</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-io</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-xml</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-servlet</artifactId>
-							<type>jar</type>
-						</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-util</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-webapp</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>org.eclipse.jetty</groupId>
+								<artifactId>jetty-security</artifactId>
+								<type>jar</type>
+							</overlay>
+							<overlay>
+								<groupId>com.beust</groupId>
+								<artifactId>jcommander</artifactId>
+								<type>jar</type>
+							</overlay>
 
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-util</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-webapp</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>org.eclipse.jetty</groupId>
-							<artifactId>jetty-security</artifactId>
-							<type>jar</type>
-						</overlay>
-						<overlay>
-							<groupId>com.beust</groupId>
-							<artifactId>jcommander</artifactId>
-							<type>jar</type>
-						</overlay>
-
-						<overlay>
-							<groupId>javax.servlet</groupId>
-							<artifactId>javax.servlet-api</artifactId>
-							<type>jar</type>
-						</overlay>
-					</overlays>
-				</configuration>
-			</plugin>
-		</plugins>
+							<overlay>
+								<groupId>javax.servlet</groupId>
+								<artifactId>javax.servlet-api</artifactId>
+								<type>jar</type>
+							</overlay>
+						</overlays>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
 	</build>
 </project>
